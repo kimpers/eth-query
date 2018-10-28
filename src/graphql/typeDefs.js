@@ -1,9 +1,7 @@
 const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
-  union Transaction = NormalTransaction | InternalTransaction | TokenTransaction
-
-  type NormalTransaction {
+  type Transaction {
     blockNumber: String
     timeStamp: String
     hash: String
@@ -16,55 +14,29 @@ const typeDefs = gql`
     gas: String
     gasPrice: String
     isError: String
-    txreceipt_status: String
+    txReceiptStatus: String
     input: String
     contractAddress: String
     cumulativeGasUsed: String
     gasUsed: String
     confirmations: String
-  }
 
-  type InternalTransaction {
-      blockNumber: String
-      timeStamp: String
-      hash: String
-      from: String
-      to: String
-      value: String
-      contractAddress: String
-      input: String
-      type: String
-      gas: String
-      gasUsed: String
-      traceId: String
-      isError: String
-      errCode: String
-  }
+    type: String
+    traceId: String
+    errCode: String
 
-  type TokenTransaction {
-    blockNumber: String
-    timeStamp: String
-    hash: String
-    nonce: String
-    blockHash: String
-    from: String
-    contractAddress: String
-    to: String
-    value: String
     tokenName: String
     tokenSymbol: String
     tokenDecimal: String
-    transactionIndex: String
-    gas: String
-    gasPrice: String
-    gasUsed: String
-    cumulativeGasUsed: String
-    input: String
-    confirmations: String
+  }
+
+  type Balance {
+    tokenName: String
+    balance: Float
   }
 
   type Account {
-    balance: String
+    balances: [Balance!]
     transactions: [Transaction!]
   }
 
