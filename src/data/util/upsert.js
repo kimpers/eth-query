@@ -4,13 +4,13 @@ const knex = require('../connector');
 // but we want to keep it updated with newest information
 // for production use there might be a performance concern
 // with this approach
-const upsert = (tableName, data, constraintColumn) => {
+const upsert = (tableName, data, constraints) => {
   const knexTable = knex(tableName);
 
   const insert = knexTable.insert(data);
 
   const update = knex.queryBuilder().update(data);
-  return knex.raw(`? ON CONFLICT (${constraintColumn}) DO ?`, [insert, update]);
+  return knex.raw(`? ON CONFLICT (${constraints.join(',')}) DO ?`, [insert, update]);
 };
 
 module.exports = upsert;

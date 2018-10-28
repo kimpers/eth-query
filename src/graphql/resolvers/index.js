@@ -2,6 +2,7 @@ const axios = require('axios');
 
 const { parseTxData } = require('../../data/util/parseData');
 const upsert = require('../../data/util/upsert');
+const { snakeCaseObj } = require('../../data/util/case');
 
 const ETHERSCAN_API_URL = 'http://api.etherscan.io/api';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
@@ -30,6 +31,8 @@ const getTransaction = async (address, txType) => {
   return data.result.map(r => ({ ...parseTxData(r), txType }));
 };
 
+// Note: This will miss some transactions if the account has made over 10000 transactions of any type
+// but this edge case is ignored to keep scope down
 const getTransactions = async address => Promise.all([
   getTransaction(address, 'txlist'),
   getTransaction(address, 'txlistinternal'),
@@ -39,7 +42,7 @@ const getTransactions = async address => Promise.all([
 
   // Note: For production these should be batched
   for (const transaction of transactions) {
-    await upsert('transactions', transaction, 'hash');
+    await upsert('transactions', snakeCaseObj(transaction), [ 'hash' ]);
   }
 
   return transactions;
@@ -47,6 +50,16 @@ const getTransactions = async address => Promise.all([
 
 const getBalance = async address => {
   const { data } = await getData('account', 'balance', address);
+
+  // Found no balance for account;
+  if (data.status !== '1') {
+    return null;
+  }
+
+  const balance = data.result;
+  const balanceItem = { address, tokenName: 'ETH', balance };
+
+  await upsert('balances', snakeCaseObj(balanceItem), [ 'address', 'token_name' ]);
 
   return data.result;
 };
