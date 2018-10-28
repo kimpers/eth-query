@@ -1,0 +1,33 @@
+version: '3'
+
+volumes:
+  postgres-data:
+  api-modules:
+
+services:
+  api:
+    image: node:10
+    volumes:
+      - .:/root/api:cached
+      - api-modules:/root/api/node_modules:cached
+    environment:
+      - DATABASE_URL=postgres://postgres:dev_password_11@db/postgres
+    ports:
+      - 3000:3000
+    working_dir: /root/api
+    links:
+      - postgres:db
+    depends_on:
+      - postgres
+    command: sh -c "yarn install && yarn dev"
+
+  postgres:
+    image: postgres:10
+    volumes:
+      - postgres-data:/var/lib/postgresql/data:delegated
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=dev_password_11
+    ports:
+      - 5432:5432
+
