@@ -63,8 +63,13 @@ const typeDefs = gql`
     confirmations: String
   }
 
+  type Account {
+    balance: String
+    transactions: [Transaction!]
+  }
+
   type Query {
-    transactions(address: String!): [Transaction!]
+    account(address: String!): Account
   }
 `;
 

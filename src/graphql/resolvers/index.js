@@ -6,15 +6,17 @@ const TYPE_NORMAL_TX = 'NormalTransaction';
 const TYPE_INTERNAL_TX = 'InternalTransaction';
 const TYPE_TOKEN_TX = 'TokenTransaction';
 
+const getData = (module, action, address) => axios.get(ETHERSCAN_API_URL, {
+  params: {
+    module,
+    action,
+    address,
+    apiKey: ETHERSCAN_API_KEY
+  }
+});
+
 const getTransaction = async (address, txType) => {
-  const { data } = await axios.get(ETHERSCAN_API_URL, {
-    params: {
-      module: 'account',
-      action: txType,
-      address,
-      apiKey: ETHERSCAN_API_KEY
-    }
-  });
+  const { data } = await getData('account', txType, address);
 
   // Nothing found return empty array;
   if (data.status === '0') {
@@ -24,11 +26,17 @@ const getTransaction = async (address, txType) => {
   return data.result;
 };
 
-const transactions = async (_, { address }) => Promise.all([
+const getTransactions = async address => Promise.all([
   getTransaction(address, 'txlist'),
   getTransaction(address, 'txlistinternal'),
   getTransaction(address, 'tokentx')
 ]).then(([ normalTx, internalTx, tokenTx ]) => [...normalTx, ...internalTx, ...tokenTx]);
+
+const getBalance = async address => {
+  const { data } = await getData('account', 'balance', address);
+
+  return data.result;
+};
 
 const resolvers = {
   Transaction: {
@@ -44,7 +52,15 @@ const resolvers = {
     }
   },
   Query: {
-    transactions
+    account (_, { address }) {
+      return Promise.all([
+        getBalance(address),
+        getTransactions(address)
+      ]).then(([balance, transactions]) => ({
+        balance,
+        transactions
+      }));
+    }
   }
 };
 
