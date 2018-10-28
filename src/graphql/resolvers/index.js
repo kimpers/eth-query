@@ -1,4 +1,8 @@
 const axios = require('axios');
+
+const { parseTxData } = require('../../data/util/parseData');
+const upsert = require('../../data/util/upsert');
+
 const ETHERSCAN_API_URL = 'http://api.etherscan.io/api';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 
@@ -23,14 +27,23 @@ const getTransaction = async (address, txType) => {
     return [];
   }
 
-  return data.result;
+  return data.result.map(r => ({ ...parseTxData(r), txType }));
 };
 
 const getTransactions = async address => Promise.all([
   getTransaction(address, 'txlist'),
   getTransaction(address, 'txlistinternal'),
   getTransaction(address, 'tokentx')
-]).then(([ normalTx, internalTx, tokenTx ]) => [...normalTx, ...internalTx, ...tokenTx]);
+]).then(async ([ normalTx, internalTx, tokenTx ]) => {
+  const transactions = [...normalTx, ...internalTx, ...tokenTx];
+
+  // Note: For production these should be batched
+  for (const transaction of transactions) {
+    await upsert('transactions', transaction, 'hash');
+  }
+
+  return transactions;
+});
 
 const getBalance = async address => {
   const { data } = await getData('account', 'balance', address);
