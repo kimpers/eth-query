@@ -1,10 +1,11 @@
 const axios = require('axios');
 const bigInt = require('big-integer');
-const { isNil } = require('lodash');
+const { isNil, uniqWith } = require('lodash');
 
 const { parseTxData } = require('../../data/util/parseData');
 const upsert = require('../../data/util/upsert');
 const { snakeCaseObj } = require('../../data/util/case');
+const knex = require('../../data/connector');
 
 const ETHERSCAN_API_URL = 'http://api.etherscan.io/api';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
@@ -40,10 +41,21 @@ const getTransactions = async address =>
   ]).then(async ([normalTx, internalTx, tokenTx]) => {
     const transactions = [...normalTx, ...internalTx, ...tokenTx];
 
-    // Note: For production this needs to be handled more efficiently
-    for (const transaction of transactions) {
-      await upsert('transactions', snakeCaseObj(transaction), ['hash']);
-    }
+    const txHashesInDb = await knex('transactions')
+      .pluck('hash')
+      .then(transactions => new Set(transactions));
+
+    // Filter out any tx already in DB too keep query effiecient
+    // upserting here can get too slow from sheer amount of transactions
+    const newTransactions = transactions.filter(t => !txHashesInDb.has(t.hash));
+
+    // Filter out any duplicates tx results and turn into snake_case
+    const uniqTransactionsCased = uniqWith(
+      newTransactions,
+      (a, b) => a.hash === b.hash
+    ).map(snakeCaseObj);
+
+    await knex.batchInsert('transactions', uniqTransactionsCased);
 
     return {
       normalTx,

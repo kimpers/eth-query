@@ -1,4 +1,4 @@
-const { isNil } = require("lodash");
+const { isNil } = require('lodash');
 
 // Etherscan seems to communicate lack of value with an empty string
 const isDefined = value => !isNil(value) && value.length > 0;
@@ -12,8 +12,8 @@ const parseTxData = tx =>
     const parsedValue = maybeStr(value);
 
     // Assumption: snake case is mistake that snuck into prod
-    if (key === "txreceipt_status") {
-      memo["txReceiptStatus"] = parsedValue;
+    if (key === 'txreceipt_status') {
+      memo['txReceiptStatus'] = parsedValue;
     } else {
       memo[key] = parsedValue;
     }
