@@ -1,4 +1,4 @@
-const knex = require('../connector');
+const knex = require('./connector');
 
 // Assumption: We dont want duplicates of same TX in db
 // but we want to keep it updated with newest information
@@ -10,7 +10,10 @@ const upsert = (tableName, data, constraints) => {
   const insert = knexTable.insert(data);
 
   const update = knex.queryBuilder().update(data);
-  return knex.raw(`? ON CONFLICT (${constraints.join(',')}) DO ?`, [insert, update]);
+  return knex.raw(`? ON CONFLICT (${constraints.join(',')}) DO ?`, [
+    insert,
+    update
+  ]);
 };
 
 module.exports = upsert;
