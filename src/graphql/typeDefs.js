@@ -35,9 +35,15 @@ const typeDefs = gql`
     balance: Float
   }
 
+  enum TxType {
+    normal
+    internal
+    token
+  }
+
   type Account {
-    balances: [Balance!]
-    transactions: [Transaction!]
+    balances(tokenName: String): [Balance!]
+    transactions(txType: TxType, from: String, to: String): [Transaction!]
   }
 
   type Query {

@@ -25,6 +25,12 @@ const parseTxData = tx =>
     return memo;
   }, {});
 
+const txTypeMapping = {
+  txlist: 'normal',
+  txlistinternal: 'internal',
+  tokentx: 'token'
+};
+
 const getTransaction = async (address, txType) => {
   const { data } = await getEtherscanData('account', txType, address);
 
@@ -33,7 +39,10 @@ const getTransaction = async (address, txType) => {
     return [];
   }
 
-  return data.result.map(r => ({ ...parseTxData(r), txType }));
+  return data.result.map(r => ({
+    ...parseTxData(r),
+    txType: txTypeMapping[txType]
+  }));
 };
 
 // Note: This will miss some transactions if the account has made over 10000 transactions of any type

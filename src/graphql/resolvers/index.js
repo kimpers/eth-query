@@ -2,6 +2,25 @@ const getTransactions = require('./transactions');
 const getBalances = require('./balances');
 
 const resolvers = {
+  Account: {
+    balances ({ balances }, { tokenName }) {
+      if (tokenName) {
+        return balances.filter(b => b.tokenName === tokenName);
+      }
+
+      return balances;
+    },
+    transactions ({ transactions }, filters) {
+      const filterKeys = Object.keys(filters);
+      if (filterKeys.length > 0) {
+        return transactions.filter(t =>
+          filterKeys.every(key => t[key] === filters[key])
+        );
+      }
+
+      return transactions;
+    }
+  },
   Query: {
     account: async (_, { address }) => {
       const {
