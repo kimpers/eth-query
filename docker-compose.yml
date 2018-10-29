@@ -7,6 +7,7 @@ volumes:
 services:
   api:
     image: node:10
+    env_file: '.env'
     volumes:
       - .:/root/api:cached
       - api-modules:/root/api/node_modules:cached
@@ -19,7 +20,7 @@ services:
       - postgres:db
     depends_on:
       - postgres
-    command: sh -c "yarn install && yarn dev"
+    command: sh -c "yarn install && yarn knex migrate:latest && yarn dev"
 
   postgres:
     image: postgres:10
